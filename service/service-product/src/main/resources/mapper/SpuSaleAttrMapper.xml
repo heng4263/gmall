@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--命名空间：接口的全路径-->
+<mapper namespace="com.atguigu.gmall.product.mapper.SpuSaleAttrMapper">
+    <!--
+       resultMap：表示返回的映射结果集
+       id ： 表示唯一标识
+       type：表示返回结果集的数据类型
+       autoMapping : 自动映射
+   -->
+    <resultMap id="spuSaleAttrMap" type="com.atguigu.gmall.model.product.SpuSaleAttr" autoMapping="true">
+        <!--id:表示主键 property：表示实体类的属性名 column：表示通过sql 执行以后查询出来的字段名-->
+        <id property="id" column="id"></id>
+        <!--result : 表示映射普通字段-->
+        <!--<result property="" column=""></result>-->
+
+        <!--mybatis 配置一对多-->
+        <!--ofType : 返回的数据类型-->
+        <!--一对多-->
+        <collection property="spuSaleAttrValueList" ofType="com.atguigu.gmall.model.product.SpuSaleAttrValue"
+                    autoMapping="true">
+            <!--如果有字段重复则起别名-->
+            <id property="id" column="sale_attr_value_id"></id>
+        </collection>
+    </resultMap>
+    <!--sql中要查询字段名    -->
+    <sql id="spuSaleAttr">
+        sa.id ,
+        sa.spu_id,
+        sa.sale_attr_name,
+        sa.base_sale_attr_id,
+        sv.id sale_attr_value_id,
+        sv.sale_attr_value_name
+    </sql>
+    <!--id:表示方法名-->
+    <select id="selectSpuSaleAttrList" resultMap="spuSaleAttrMap">
+        select
+        <include refid="spuSaleAttr"></include>
+        from spu_sale_attr sa
+        inner join spu_sale_attr_value  sv
+        on  sa.spu_id=sv.spu_id
+        and sa.base_sale_attr_id=sv.base_sale_attr_id
+        where  sa.spu_id=#{spu_id}
+    </select>
+
+    <select id="selectSpuSaleAttrListCheckBySku" resultMap="spuSaleAttrMap">
+        SELECT sa.id ,sa.spu_id, sa.sale_attr_name,sa.base_sale_attr_id,
+               sv.id sale_attr_value_id,
+               sv.sale_attr_value_name,
+               skv.sku_id,
+               IF(skv.sku_id IS NULL,0,1)  is_checked
+        FROM spu_sale_attr sa
+                 INNER JOIN spu_sale_attr_value  sv ON  sa.spu_id=sv.spu_id AND sa.base_sale_attr_id=sv.base_sale_attr_id
+                 LEFT JOIN sku_sale_attr_value skv ON skv.sale_attr_value_id= sv.id AND skv.sku_id=#{skuId}
+        WHERE  sa.spu_id=#{spuId}
+        ORDER BY sv.base_sale_attr_id,sv.id
+    </select>
+
+
+</mapper>
